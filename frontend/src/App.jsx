@@ -43,17 +43,22 @@ export default function App() {
 
   // Load graph data
   useEffect(() => {
-    axios.get(`${API_BASE}/api/graph`)
-      .then(res => {
-        const { nodes, edges } = res.data;
-        setGraphData({
-          nodes,
-          links: edges.map(e => ({ ...e, source: e.source, target: e.target })),
-        });
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  axios.get(`${API_BASE}/api/graph`)
+    .then(res => {
+      const { nodes, edges } = res.data;
+      setGraphData({
+        nodes,
+        links: edges.map(e => ({ ...e, source: e.source, target: e.target })),
+      });
+      // Force graph to render after data loads
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        fgRef.current?.zoomToFit(400, 40);
+      }, 300);
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
+}, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -160,6 +165,8 @@ export default function App() {
           ) : (
             <ForceGraph2D
               ref={fgRef}
+              width={window.innerWidth - 420}   // ← add this
+              height={window.innerHeight - 50}
               graphData={graphData}
               nodeId="id"
               nodeLabel="label"
